@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,11 +17,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-# Copyright (c) 2016, Adam H. Leventhal. All rights reserved.
+#
 
 #
-# Requires: dateparser, ics, csv
+# Copyright 2016, 2019 Adam H. Leventhal
+#
+
+#
+# Requires: dateparser, ics
 #
 
 from __future__ import print_function
@@ -34,36 +38,33 @@ def warning(*objs):
 
 def fail(*objs):
     print(*objs, file=sys.stderr)
-    os.exit(1)
-
-# ignore characters I can't print
-reload(sys)
-sys.setdefaultencoding('utf8')
+    sys.exit(1)
 
 c = Calendar()
 
 
 with sys.stdin as csvfile:
-	reader = csv.DictReader(csvfile)
+  reader = csv.DictReader(csvfile)
 
-	for field in reader.fieldnames:
-		if not field in ['summary', 'location', 'dtstart', 'dtend']:
-			warning("the field '%s' is ignored" % field)
+  for field in reader.fieldnames:
+    if not field in ['summary', 'location', 'dtstart', 'dtend']:
+      warning("the field '%s' is ignored" % field)
 
-		for field in ['summary', 'location', 'dtstart', 'dtend']:
-			if not field in reader.fieldnames:
-				fail("missing field '%s'" % field)
+    for field in ['summary', 'location', 'dtstart', 'dtend']:
+      if not field in reader.fieldnames:
+        fail("missing field '%s'" % field)
 
-	for row in reader:
-		dtstart = dateparser.parse(row['dtstart'])
-		dtend = dateparser.parse(row['dtend'])
-		e = Event(
-			name = row['summary'],
-			location = row['location'],
-			begin = dtstart.strftime("%Y-%m-%dT%H:%M:00"),
-			end = dtend.strftime("%Y-%m-%dT%H:%M:00"),
-		)
-		c.events.append(e)
+  for row in reader:
+    dtstart = dateparser.parse(row['dtstart'])
+    dtend = dateparser.parse(row['dtend'])
+
+    e = Event(
+      name = row['summary'],
+      location = row['location'],
+      begin = dtstart.isoformat(),
+      end = dtend.isoformat(),
+    )
+    c.events.add(e)
 
 with sys.stdout as f:
-	f.writelines(c)
+  f.writelines(c)
